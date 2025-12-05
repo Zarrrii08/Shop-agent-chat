@@ -5,8 +5,8 @@
 
 export const AppConfig = {
   // API Configuration
-  api: {
-    defaultModel: 'claude-3-5-sonnet-latest',
+ api: {
+    defaultModel: 'claude-sonnet-4-20250514', // <-- UPDATED
     maxTokens: 2000,
     defaultPromptType: 'standardAssistant',
   },
@@ -24,7 +24,7 @@ export const AppConfig = {
 
   // Tool Configuration
   tools: {
-    productSearchName: "search_shop_catalog",
+  productSearchName: "search_shop_catalog",
     maxProductsToDisplay: 3
   }
 };

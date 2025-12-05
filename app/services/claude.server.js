@@ -8,15 +8,16 @@ import systemPrompts from "../prompts/prompts.json";
 
 /**
  * Creates a Claude service instance
- * @param {string} apiKey - Claude API key
+ * @param {string} apiKeyOverride - Claude API key (optional override)
  * @returns {Object} Claude service with methods for interacting with Claude API
  */
-export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
-  // Initialize Claude client
-  const anthropic = new Anthropic({ 
-    apiKey: apiKey,
-    baseURL: 'https://proxy.shopify.ai/apis/anthropic'
-  });
+export function createClaudeService(apiKeyOverride) {
+  const resolvedKey = process.env.CLAUDE_API_KEY.trim();
+
+  console.log("[Claude] Using Claude API key with length:", resolvedKey.length);
+
+  const anthropic = new Anthropic({ apiKey: resolvedKey });
+
 
   /**
    * Streams a conversation with Claude
