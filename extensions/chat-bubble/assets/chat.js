@@ -487,13 +487,19 @@
 
           const response = await fetch(streamUrl, {
             method: 'POST',
+            mode: 'cors',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'text/event-stream',
-              'X-Shopify-Shop-Id': shopId
+              'X-Shopify-Shop-Id': shopId || ''
             },
             body: requestBody
           });
+
+          if (!response.ok || !response.body) {
+            const errorText = await response.text().catch(() => '');
+            throw new Error(`Chat API request failed: ${response.status} ${errorText}`);
+          }
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
@@ -635,11 +641,11 @@ const historyUrl = `${window.shopBackendUrl}?history=true&conversation_id=${enco
 
           const response = await fetch(historyUrl, {
             method: 'GET',
+            mode: 'cors',
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json'
-            },
-            mode: 'cors'
+            }
           });
 
           if (!response.ok) {
