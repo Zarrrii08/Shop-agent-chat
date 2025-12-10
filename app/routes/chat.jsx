@@ -30,7 +30,7 @@ export async function loader({ request }) {
   }
 
   // Handle SSE requests
-  if (!url.searchParams.has('history') && request.headers.get("Accept") === "text/event-stream") {
+  if (!url.searchParams.has('history') && (request.headers.get("Accept") || "").includes("text/event-stream")) {
     return handleChatRequest(request);
   }
 
@@ -64,36 +64,66 @@ async function handleHistoryRequest(request, conversationId) {
  */
 async function handleChatRequest(request) {
   try {
-    // Get message data from request body
-    const body = await request.json();
-    const userMessage = body.message;
+    const wantsSse = (request.headers.get("Accept") || "").includes("text/event-stream");
+    const body = await safeReadJson(request);
+    const rawMessage = body?.message ?? "";
+    const userMessage = typeof rawMessage === "string" ? rawMessage.trim() : "";
 
     // Validate required message
     if (!userMessage) {
       return new Response(
         JSON.stringify({ error: AppConfig.errorMessages.missingMessage }),
-        { status: 400, headers: getSseHeaders(request) }
+        { status: 400, headers: wantsSse ? getSseHeaders(request) : getCorsHeaders(request) }
       );
     }
 
     // Generate or use existing conversation ID
-    const conversationId = body.conversation_id || Date.now().toString();
-    const promptType = body.prompt_type || AppConfig.api.defaultPromptType;
+    const conversationId =
+      (typeof body.conversation_id === "string" && body.conversation_id.trim()) ||
+      Date.now().toString();
+    const promptType =
+      (typeof body.prompt_type === "string" && body.prompt_type) || AppConfig.api.defaultPromptType;
 
-    // Create a stream for the response
-    const responseStream = createSseStream(async (stream) => {
-      await handleChatSession({
-        request,
-        userMessage,
-        conversationId,
-        promptType,
-        stream
+    if (wantsSse) {
+      // Create a stream for the response
+      const responseStream = createSseStream(async (stream) => {
+        await handleChatSession({
+          request,
+          userMessage,
+          conversationId,
+          promptType,
+          stream
+        });
       });
+
+      return new Response(responseStream, {
+        headers: getSseHeaders(request)
+      });
+    }
+
+    // JSON fallback (non-SSE clients)
+    const bufferedStream = createBufferedStream();
+    await handleChatSession({
+      request,
+      userMessage,
+      conversationId,
+      promptType,
+      stream: bufferedStream
     });
 
-    return new Response(responseStream, {
-      headers: getSseHeaders(request)
-    });
+    const result = bufferedStream.getResult();
+
+    return new Response(
+      JSON.stringify({
+        conversation_id: conversationId,
+        message: result.text,
+        products: result.products,
+        events: result.events
+      }),
+      {
+        headers: getCorsHeaders(request)
+      }
+    );
   } catch (error) {
     console.error('Error in chat request handler:', error);
     return new Response(JSON.stringify({ error: error.message }), {
@@ -125,8 +155,9 @@ async function handleChatSession({
 
   // Initialize MCP client
   const shopId = request.headers.get("X-Shopify-Shop-Id");
-  const shopDomain = request.headers.get("Origin");
-  const { mcpApiUrl } = await getCustomerAccountUrls(shopDomain, conversationId);
+  const shopDomain = request.headers.get("Origin") || "";
+  const customerAccountUrls = await getCustomerAccountUrls(shopDomain, conversationId);
+  const mcpApiUrl = customerAccountUrls?.mcpApiUrl;
 
   const mcpClient = new MCPClient(
     shopDomain,
@@ -178,8 +209,10 @@ async function handleChatSession({
 
     // Execute the conversation stream
     let finalMessage = { role: 'user', content: userMessage };
+    let safetyCounter = 0;
+    const maxTurns = 6;
 
-    while (finalMessage.stop_reason !== "end_turn") {
+    while (finalMessage.stop_reason !== "end_turn" && safetyCounter < maxTurns) {
       finalMessage = await claudeService.streamConversation(
         {
           messages: conversationHistory,
@@ -263,6 +296,12 @@ async function handleChatSession({
           }
         }
       );
+      safetyCounter += 1;
+
+      // Break early if the API did not provide a stop reason to avoid infinite loops
+      if (!finalMessage || !finalMessage.stop_reason) {
+        break;
+      }
     }
 
     // Signal end of turn
@@ -289,6 +328,11 @@ async function handleChatSession({
  */
 async function getCustomerAccountUrls(shopDomain, conversationId) {
   try {
+    if (!shopDomain) {
+      console.warn("No shop domain provided, skipping customer MCP URL lookup");
+      return null;
+    }
+
     // Check if the customer account URL exists in the DB
     const existingUrls = await getCustomerAccountUrlsFromDb(conversationId);
 
@@ -323,6 +367,58 @@ async function getCustomerAccountUrls(shopDomain, conversationId) {
     console.error("Error getting customer MCP API URL:", error);
     return null;
   }
+}
+
+/**
+ * Safely read JSON from a request without throwing on empty or invalid bodies
+ */
+async function safeReadJson(request) {
+  try {
+    return await request.json();
+  } catch (error) {
+    // GET requests for SSE won't have a body; log other failures for debugging
+    if (request.method !== "GET") {
+      console.warn("Failed to parse JSON body:", error?.message || error);
+    }
+    return {};
+  }
+}
+
+/**
+ * Create a lightweight stream manager that buffers events for non-SSE callers
+ */
+function createBufferedStream() {
+  const events = [];
+  const textChunks = [];
+  const resultState = { products: [] };
+
+  return {
+    sendMessage(payload) {
+      events.push(payload);
+
+      if (payload?.type === "chunk" && typeof payload.chunk === "string") {
+        textChunks.push(payload.chunk);
+      }
+
+      if (payload?.type === "product_results" && Array.isArray(payload.products)) {
+        resultState.products = payload.products;
+      }
+    },
+    closeStream() {},
+    handleStreamingError(error) {
+      events.push({
+        type: "error",
+        error: error?.message || AppConfig.errorMessages.genericError
+      });
+    },
+    getResult() {
+      return {
+        text: textChunks.join(""),
+        events,
+        products: resultState.products
+      };
+    }
+  };
 }
 
 /**

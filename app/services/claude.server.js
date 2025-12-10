@@ -12,11 +12,24 @@ import systemPrompts from "../prompts/prompts.json";
  * @returns {Object} Claude service with methods for interacting with Claude API
  */
 export function createClaudeService(apiKeyOverride) {
-  const resolvedKey = process.env.CLAUDE_API_KEY.trim();
+  const resolvedKey = [
+    apiKeyOverride,
+    process.env.ANTHROPIC_API_KEY,
+    process.env.CLAUDE_API_KEY
+  ].find((key) => typeof key === "string" && key.trim().length > 0);
 
-  console.log("[Claude] Using Claude API key with length:", resolvedKey.length);
+  if (!resolvedKey) {
+    throw new Error("Anthropic API key is missing. Set ANTHROPIC_API_KEY in .env");
+  }
 
-  const anthropic = new Anthropic({ apiKey: resolvedKey });
+  console.log("[Claude] Using Anthropic API key with length:", resolvedKey.trim().length);
+
+  // Configure the official Anthropic SDK with sensible network safety defaults
+  const anthropic = new Anthropic({
+    apiKey: resolvedKey.trim(),
+    maxRetries: 3,
+    timeout: 60_000
+  });
 
 
   /**

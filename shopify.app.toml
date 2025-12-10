@@ -1,16 +1,15 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "YOUR_CLIENT_ID"
-name = "shop-chat-agent"
-handle = "shop-chat-agent"
+client_id = "3aed1d00075fc392d1b12dae45303908"
+name = "AiAgent"
 application_url = "https://shopify-agent-003f.webgeeksolutions.com.au"
 embedded = true
 
 [build]
-include_config_on_deploy = true
+automatically_update_urls_on_dev = true
 
 [webhooks]
-api_version = "2025-04"
+api_version = "2026-01"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
@@ -22,11 +21,9 @@ redirect_urls = [
   "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
 ]
 
-[pos]
-embedded = false
-
 [customer_authentication]
-redirect_urls = [
+redirect_uris = [
   "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth",
   "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
 ]
+
