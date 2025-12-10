@@ -3,7 +3,7 @@
 client_id = "YOUR_CLIENT_ID"
 name = "shop-chat-agent"
 handle = "shop-chat-agent"
-application_url = "https://shop-chat-agent.com"
+application_url = "https://shopify-agent-003f.webgeeksolutions.com.au"
 embedded = true
 
 [build]
@@ -17,12 +17,16 @@ api_version = "2025-04"
 scopes = "customer_read_customers,customer_read_orders,customer_read_store_credit_account_transactions,customer_read_store_credit_accounts,unauthenticated_read_product_listings"
 
 [auth]
-redirect_urls = [ "https://shop-chat-agent.com/api/auth" ]
+redirect_urls = [
+  "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth",
+  "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
+]
 
 [pos]
 embedded = false
 
 [customer_authentication]
-redirect_uris = [
-  "https://shop-chat-agent.com/callback"
+redirect_urls = [
+  "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth",
+  "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
 ]
