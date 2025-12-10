@@ -193,7 +193,7 @@ async function handleChatSession({
     // Fetch all messages from the database for this conversation
     const dbMessages = await getConversationHistory(conversationId);
 
-    // Format messages for Claude API
+    // Format messages for Claude API ensuring Anthropic content block shape
     conversationHistory = dbMessages.map(dbMessage => {
       let content;
       try {
@@ -201,14 +201,15 @@ async function handleChatSession({
       } catch (e) {
         content = dbMessage.content;
       }
+
       return {
         role: dbMessage.role,
-        content
+        content: normalizeContent(content)
       };
     });
 
     // Execute the conversation stream
-    let finalMessage = { role: 'user', content: userMessage };
+    let finalMessage = { role: 'user', content: normalizeContent(userMessage) };
     let safetyCounter = 0;
     const maxTurns = 6;
 
@@ -421,6 +422,28 @@ function createBufferedStream() {
   };
 }
 
+/**
+ * Normalize message content into Anthropic content block format
+ * Accepts string, array of blocks, or already-structured content
+ */
+function normalizeContent(content) {
+  // If already an array of blocks, return as-is
+  if (Array.isArray(content)) {
+    return content;
+  }
+
+  // If it's an object with type/text etc., wrap into array
+  if (content && typeof content === "object" && content.type) {
+    return [content];
+  }
+
+  // Fallback: treat as text
+  const text = typeof content === "string" ? content : JSON.stringify(content || "");
+  return [{
+    type: "text",
+    text
+  }];
+}
 /**
  * Gets CORS headers for the response
  * @param {Request} request - The request object
