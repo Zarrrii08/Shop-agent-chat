@@ -481,9 +481,8 @@
             prompt_type: promptType
           });
 
-          const protocol = window.location.protocol;
-          const host = window.location.host;
-          const streamUrl = `${protocol}//${host}/chat`;
+          const streamUrl = window.shopBackendUrl;
+
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -632,7 +631,7 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-const historyUrl = `${window.location.protocol}//${window.location.host}/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;          console.log('Fetching history from:', historyUrl);
+const historyUrl = `${window.shopBackendUrl}?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
 
           const response = await fetch(historyUrl, {
             method: 'GET',
