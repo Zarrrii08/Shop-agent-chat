@@ -157,7 +157,7 @@ async function handleChatSession({
   const shopId = request.headers.get("X-Shopify-Shop-Id");
   const shopDomain = request.headers.get("Origin") || "";
   const customerAccountUrls = await getCustomerAccountUrls(shopDomain, conversationId);
-  const mcpApiUrl = customerAccountUrls?.mcpApiUrl;
+    const mcpApiUrl = customerAccountUrls?.mcpApiUrl;
 
   const mcpClient = new MCPClient(
     shopDomain,
@@ -202,8 +202,10 @@ async function handleChatSession({
         content = dbMessage.content;
       }
 
+      const role = dbMessage.role === "assistant" ? "assistant" : "user";
+
       return {
-        role: dbMessage.role,
+        role,
         content: normalizeContent(content)
       };
     });
