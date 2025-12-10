@@ -70,8 +70,9 @@ export function createStreamManager(encoder, controller) {
     } else {
       sendError({
         type: 'error',
-        error: 'Failed to get response from Claude',
-        details: message || 'Unknown error'
+        error: message || 'Failed to get response from Claude',
+        details: message || 'Unknown error',
+        status
       });
     }
   };
