@@ -481,7 +481,9 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://localhost:3458/chat';
+          const protocol = window.location.protocol;
+          const host = window.location.host;
+          const streamUrl = `${protocol}//${host}/chat`;
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -630,8 +632,7 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
-          console.log('Fetching history from:', historyUrl);
+const historyUrl = `${window.location.protocol}//${window.location.host}/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;          console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
             method: 'GET',
