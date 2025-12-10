@@ -10,8 +10,10 @@ dotenv.config();
 export const AppConfig = {
   // API Configuration
   api: {
-    // Updated to the stable Claude Sonnet release requested
-    defaultModel: "claude-3-5-sonnet-20241022",
+    // Primary model (can be overridden via env ANTHROPIC_MODEL)
+    defaultModel: process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
+    // Fallback if the primary model is not available in the account/region
+    fallbackModel: process.env.ANTHROPIC_FALLBACK_MODEL || "claude-3-5-sonnet-latest",
     maxTokens: 2000,
     defaultPromptType: "standardAssistant",
   },

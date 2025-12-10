@@ -52,14 +52,40 @@ export function createClaudeService(apiKeyOverride) {
     // Get system prompt from configuration or use default
     const systemInstruction = getSystemPrompt(promptType);
 
-    // Create stream
-    const stream = await anthropic.messages.stream({
-      model: AppConfig.api.defaultModel,
-      max_tokens: AppConfig.api.maxTokens,
-      system: systemInstruction,
-      messages,
-      tools: tools && tools.length > 0 ? tools : undefined
-    });
+    const candidateModels = [
+      AppConfig.api.defaultModel,
+      AppConfig.api.fallbackModel
+    ].filter(Boolean);
+
+    let stream;
+    let lastError;
+
+    for (const model of candidateModels) {
+      try {
+        stream = await anthropic.messages.stream({
+          model,
+          max_tokens: AppConfig.api.maxTokens,
+          system: systemInstruction,
+          messages,
+          tools: tools && tools.length > 0 ? tools : undefined
+        });
+        // Successfully created stream
+        break;
+      } catch (err) {
+        lastError = err;
+        // Retry on model not found
+        const message = (err?.message || "").toLowerCase();
+        const isNotFound = message.includes("not_found") || message.includes("model");
+        if (!isNotFound || model === candidateModels[candidateModels.length - 1]) {
+          throw err;
+        }
+        console.warn(`[Claude] Model ${model} unavailable, retrying with fallback...`);
+      }
+    }
+
+    if (!stream && lastError) {
+      throw lastError;
+    }
 
     // Set up event handlers
     if (streamHandlers.onText) {
