@@ -12,7 +12,7 @@ export async function generateAuthUrl(conversationId, shopId) {
 
   // Generate authorization URL for the customer
   const clientId = process.env.SHOPIFY_API_KEY;
-  const scope = "customer-account-mcp-api:full";
+  const scope = "customer_read_customers,customer_read_orders,customer_read_store_credit_account_transactions,customer_read_store_credit_accounts";
   const responseType = "code";
 
   // Use the actual app URL for redirect
@@ -60,7 +60,7 @@ async function getBaseAuthUrl(conversationId) {
   const urls = await getCustomerAccountUrls(conversationId);
 
   // Return stored URL or default to Shopify accounts
-  return urls?.authorizationUrl || 'https://shopify.com/authentication';
+  return urls?.authorizationUrl || 'https://accounts.shopify.com/oauth/authorize';
 }
 
 /**

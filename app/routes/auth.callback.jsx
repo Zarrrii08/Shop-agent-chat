@@ -162,6 +162,6 @@ async function exchangeCodeForToken(code, state) {
  * @returns {Promise<string|null>} - The token URL or null if not found
  */
 async function getTokenUrl(conversationId) {
-  const { tokenUrl } = await getCustomerAccountUrls(conversationId);
-  return tokenUrl;
+  const urls = await getCustomerAccountUrls(conversationId);
+  return urls?.tokenUrl || 'https://accounts.shopify.com/oauth/token';
 }
