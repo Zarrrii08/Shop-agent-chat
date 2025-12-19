@@ -16,7 +16,7 @@ export async function generateAuthUrl(conversationId, shopId) {
   const responseType = "code";
 
   // Use the actual app URL for redirect
-  const redirectUri = `${process.env.SHOPIFY_APP_URL}/api/auth/callback`;
+  const redirectUri = 'https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback';
 
   // Include the conversation ID and shop ID in the state parameter for tracking
   const state = `${conversationId}-${shopId}`;
@@ -57,9 +57,10 @@ export async function generateAuthUrl(conversationId, shopId) {
  */
 async function getBaseAuthUrl(conversationId) {
   const { getCustomerAccountUrls } = await import('./db.server');
-  const { authorizationUrl } = await getCustomerAccountUrls(conversationId);
+  const urls = await getCustomerAccountUrls(conversationId);
 
-  return authorizationUrl;
+  // Return stored URL or default to Shopify accounts
+  return urls?.authorizationUrl || 'https://shopify.com/authentication';
 }
 
 /**

@@ -96,7 +96,7 @@ async function exchangeCodeForToken(code, state) {
     throw new Error("SHOPIFY_CLIENT_ID and SHOPIFY_SHOP_ID environment variables are required");
   }
 
-  const redirectUri = `${process.env.SHOPIFY_APP_URL}/api/auth/callback`;
+  const redirectUri = 'https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback';
 
   // Correct token URL format
   const tokenUrl = await getTokenUrl(conversationId);
