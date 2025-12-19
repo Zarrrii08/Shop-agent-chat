@@ -3,7 +3,8 @@
  * Handles chat interactions with Claude API and tools
  */
 import MCPClient from "../mcp-client";
-import { saveMessage, getConversationHistory, storeCustomerAccountUrls, getCustomerAccountUrls as getCustomerAccountUrlsFromDb } from "../db.server";
+import { saveMessage, getConversationHistory, storeCustomerAccountUrls, getCustomerAccountUrls as getCustomerAccountUrlsFromDb, getCustomerToken } from "../db.server";
+import { generateAuthUrl } from "../auth.server";
 import AppConfig from "../services/config.server";
 import { createSseStream } from "../services/streaming.server";
 import { createClaudeService } from "../services/claude.server";
@@ -134,6 +135,32 @@ async function handleChatRequest(request) {
 }
 
 /**
+ * Detect if a user message requests account-level data
+ * @param {string} message - The user's message
+ * @returns {boolean} - True if account data is requested
+ */
+function isAccountDataRequest(message) {
+  const accountKeywords = [
+    'my account', 'my orders', 'my order', 'order history', 'order status',
+    'tracking', 'track my order', 'my purchases', 'my profile', 'account info',
+    'customer info', 'my details', 'my information', 'login', 'sign in'
+  ];
+
+  const lowerMessage = message.toLowerCase();
+  return accountKeywords.some(keyword => lowerMessage.includes(keyword));
+}
+
+/**
+ * Check if customer is authenticated for account data access
+ * @param {string} conversationId - The conversation ID
+ * @returns {Promise<boolean>} - True if authenticated
+ */
+async function isCustomerAuthenticated(conversationId) {
+  const token = await getCustomerToken(conversationId);
+  return token && token.accessToken;
+}
+
+/**
  * Handle a complete chat session
  * @param {Object} params - Session parameters
  * @param {Request} params.request - The request object
@@ -149,6 +176,30 @@ async function handleChatSession({
   promptType,
   stream
 }) {
+  // Phase 2: Detect account-level data requests and ensure authentication
+  if (isAccountDataRequest(userMessage)) {
+    const isAuthenticated = await isCustomerAuthenticated(conversationId);
+    if (!isAuthenticated) {
+      // Generate auth URL and prompt user to authorize
+      const shopId = request.headers.get("X-Shopify-Shop-Id");
+      const authResponse = await generateAuthUrl(conversationId, shopId);
+
+      // Save the user message for later processing
+      await saveMessage(conversationId, 'user', userMessage);
+
+      // Send auth prompt to client
+      stream.sendMessage({
+        type: 'auth_required',
+        message: `To access your account information, orders, and order tracking, I need you to authorize access to your customer data. [Click here to authorize](${authResponse.url})`,
+        conversation_id: conversationId
+      });
+
+      // End the stream
+      stream.sendMessage({ type: 'done' });
+      return;
+    }
+  }
+
   // Initialize services
   const claudeService = createClaudeService();
   const toolService = createToolService();
