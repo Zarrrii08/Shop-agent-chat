@@ -187,14 +187,19 @@ async function handleChatSession({
       // Save the user message for later processing
       await saveMessage(conversationId, 'user', userMessage);
 
-      // Send auth prompt to client
+      // Send auth prompt to client as a regular message
+      const authMessage = `To access your account information, orders, and order tracking, I need you to authorize access to your customer data. [Click here to authorize](${authResponse.url})`;
+      
+      // Save the auth message
+      await saveMessage(conversationId, 'assistant', authMessage);
+      
+      // Send the message to client
+      stream.sendMessage({ type: 'id', conversation_id: conversationId });
       stream.sendMessage({
-        type: 'auth_required',
-        message: `To access your account information, orders, and order tracking, I need you to authorize access to your customer data. [Click here to authorize](${authResponse.url})`,
-        conversation_id: conversationId
+        type: 'chunk',
+        chunk: authMessage
       });
-
-      // End the stream
+      stream.sendMessage({ type: 'message_complete' });
       stream.sendMessage({ type: 'done' });
       return;
     }

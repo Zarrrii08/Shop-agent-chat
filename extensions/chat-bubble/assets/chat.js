@@ -587,11 +587,6 @@
             currentMessageElement.textContent = "Sorry, our servers are currently busy. Please try again later.";
             break;
 
-          case 'auth_required':
-            // Save the last user message for resuming after authentication
-            sessionStorage.setItem('shopAiLastMessage', userMessage || '');
-            break;
-
           case 'product_results':
             ShopAIChat.UI.displayProductResults(data.products);
             break;
@@ -785,8 +780,8 @@ const historyUrl = `${window.shopBackendUrl}?history=true&conversation_id=${enco
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
-              encodeURIComponent(conversationId);
+            const baseUrl = new URL(window.shopBackendUrl).origin;
+            const tokenUrl = `${baseUrl}/auth/token-status?conversation_id=${encodeURIComponent(conversationId)}`;
             const response = await fetch(tokenUrl);
 
             if (!response.ok) {
