@@ -2,6 +2,7 @@
 
 client_id = "3aed1d00075fc392d1b12dae45303908"
 name = "AiAgent"
+handle = "aiagent"
 application_url = "https://shopify-agent-003f.webgeeksolutions.com.au"
 embedded = true
 
@@ -12,12 +13,10 @@ automatically_update_urls_on_dev = true
 api_version = "2026-01"
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "customer_read_customers,customer_read_orders,customer_read_store_credit_account_transactions,customer_read_store_credit_accounts,unauthenticated_read_product_listings"
 
 [auth]
 redirect_urls = [
-  "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth",
   "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
 ]
 
@@ -25,4 +24,3 @@ redirect_urls = [
 redirect_uris = [
   "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
 ]
-
