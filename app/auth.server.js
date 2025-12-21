@@ -37,15 +37,46 @@ export async function generateAuthUrl(conversationId, shopId) {
 
   // Set code_challenge and code_challenge_method parameters
   const codeChallengeMethod = "S256";
-  const baseAuthUrl = await getBaseAuthUrl(conversationId);
+  let baseAuthUrl = await getBaseAuthUrl(conversationId);
   console.log('[generateAuthUrl] Base Auth URL:', baseAuthUrl);
 
   if (!baseAuthUrl) {
-    throw new Error('Base auth URL not found');
+    baseAuthUrl = 'https://accounts.shopify.com/oauth/authorize';
+    console.warn('[generateAuthUrl] No base auth URL found, falling back to default:', baseAuthUrl);
   }
 
-  // Construct the authorization URL
-  const authUrl = `${baseAuthUrl}?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&state=${state}&code_challenge=${challenge}&code_challenge_method=${codeChallengeMethod}`;
+  // If the returned base URL contains template placeholders like {redirect_uri}, replace them
+  try {
+    if (baseAuthUrl.includes('{redirect_uri}')) {
+      baseAuthUrl = baseAuthUrl.replace(/\{redirect_uri\}/g, encodeURIComponent(redirectUri));
+    }
+
+    if (baseAuthUrl.includes('{client_id}')) {
+      baseAuthUrl = baseAuthUrl.replace(/\{client_id\}/g, clientId || '');
+    }
+
+    // Build the final URL using the URL API to avoid manual string concatenation issues
+    const urlObj = new URL(baseAuthUrl);
+    // Ensure we don't leave an empty redirect_uri param from the base
+    if (urlObj.searchParams.has('redirect_uri')) {
+      urlObj.searchParams.delete('redirect_uri');
+    }
+
+    urlObj.searchParams.set('client_id', clientId || '');
+    urlObj.searchParams.set('scope', scope);
+    urlObj.searchParams.set('redirect_uri', redirectUri);
+    urlObj.searchParams.set('response_type', responseType);
+    urlObj.searchParams.set('state', state);
+    urlObj.searchParams.set('code_challenge', challenge);
+    urlObj.searchParams.set('code_challenge_method', codeChallengeMethod);
+
+    var authUrl = urlObj.toString();
+  } catch (err) {
+    // Fallback to original construction if URL parsing fails for unexpected endpoint formats
+    console.warn('[generateAuthUrl] Failed to parse baseAuthUrl with URL API, falling back to string concatenation:', err?.message || err);
+    authUrl = `${baseAuthUrl}?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&state=${state}&code_challenge=${challenge}&code_challenge_method=${codeChallengeMethod}`;
+    console.log('[generateAuthUrl] Fallback Full Auth URL:', authUrl);
+  }
   console.log('[generateAuthUrl] Full Auth URL:', authUrl);
   console.log('[generateAuthUrl] Encoded redirect_uri:', encodeURIComponent(redirectUri));
   console.log('[generateAuthUrl] Auth URL includes redirect_uri param:', authUrl.includes('redirect_uri='));
