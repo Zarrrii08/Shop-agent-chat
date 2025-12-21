@@ -75,6 +75,8 @@ export async function generateAuthUrl(conversationId, shopId) {
 
     console.log('[generateAuthUrl] Setting searchParams - clientId:', clientId);
     console.log('[generateAuthUrl] Setting searchParams - redirectUri:', redirectUri);
+    console.log('[generateAuthUrl] redirectUri type:', typeof redirectUri);
+    console.log('[generateAuthUrl] redirectUri length:', redirectUri ? redirectUri.length : 'null/undefined');
     
     urlObj.searchParams.set('client_id', clientId || '');
     urlObj.searchParams.set('scope', scope);
@@ -116,8 +118,13 @@ async function getBaseAuthUrl(conversationId) {
   const { getCustomerAccountUrls } = await import('./db.server');
   const urls = await getCustomerAccountUrls(conversationId);
 
+  console.log('[getBaseAuthUrl] Retrieved URLs from DB:', urls);
+  console.log('[getBaseAuthUrl] authorizationUrl:', urls?.authorizationUrl);
+
   // Return stored URL or default to Shopify accounts
-  return urls?.authorizationUrl || 'https://accounts.shopify.com/oauth/authorize';
+  const result = urls?.authorizationUrl || 'https://accounts.shopify.com/oauth/authorize';
+  console.log('[getBaseAuthUrl] Returning:', result);
+  return result;
 }
 
 /**
