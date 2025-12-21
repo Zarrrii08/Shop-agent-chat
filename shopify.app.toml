@@ -2,7 +2,6 @@
 
 client_id = "3aed1d00075fc392d1b12dae45303908"
 name = "AiAgent"
-handle = "aiagent"
 application_url = "https://shopify-agent-003f.webgeeksolutions.com.au"
 embedded = true
 
@@ -24,3 +23,4 @@ redirect_urls = [
 redirect_uris = [
   "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"
 ]
+

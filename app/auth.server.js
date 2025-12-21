@@ -17,6 +17,9 @@ export async function generateAuthUrl(conversationId, shopId) {
 
   // Use the actual app URL for redirect
   const redirectUri = 'https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback';
+  console.log('[generateAuthUrl] Redirect URI:', redirectUri);
+  console.log('[generateAuthUrl] Client ID:', clientId);
+  console.log('[generateAuthUrl] Scope:', scope);
 
   // Include the conversation ID and shop ID in the state parameter for tracking
   const state = `${conversationId}-${shopId}`;
@@ -35,14 +38,16 @@ export async function generateAuthUrl(conversationId, shopId) {
   // Set code_challenge and code_challenge_method parameters
   const codeChallengeMethod = "S256";
   const baseAuthUrl = await getBaseAuthUrl(conversationId);
+  console.log('[generateAuthUrl] Base Auth URL:', baseAuthUrl);
 
   if (!baseAuthUrl) {
     throw new Error('Base auth URL not found');
   }
 
-
-  // Construct the authorization URL with hardcoded shop ID
+  // Construct the authorization URL
   const authUrl = `${baseAuthUrl}?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&state=${state}&code_challenge=${challenge}&code_challenge_method=${codeChallengeMethod}`;
+  console.log('[generateAuthUrl] Full Auth URL:', authUrl);
+  console.log('[generateAuthUrl] Encoded redirect_uri:', encodeURIComponent(redirectUri));
 
   return {
     url: authUrl,
