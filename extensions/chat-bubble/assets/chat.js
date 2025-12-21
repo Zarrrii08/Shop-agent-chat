@@ -92,9 +92,7 @@
         document.addEventListener('click', function(event) {
           if (event.target && event.target.classList.contains('shop-auth-trigger')) {
             event.preventDefault();
-            if (window.shopAuthUrl) {
-              ShopAIChat.Auth.openAuthPopup(window.shopAuthUrl);
-            }
+            ShopAIChat.Auth.openAuthPopup(event.target);
           }
         });
       },
@@ -375,11 +373,12 @@
           // Check if it's an auth URL
           if (url.includes('shopify.com/authentication') || url.includes('accounts.shopify.com')) {
             console.log('[formatMessageContent] Detected as auth link, storing URL');
-            // Store the auth URL in a global variable for later use - this avoids issues with onclick handlers
+            // Store the auth URL in a global variable for backward compatibility
             window.shopAuthUrl = url;
             console.log('[formatMessageContent] window.shopAuthUrl set to:', window.shopAuthUrl);
-            // Just return normal link that will be handled by the document click handler
-            return '<a href="#auth" class="shop-auth-trigger">' + text + '</a>';
+            // Return a link element that carries the full auth URL in a data attribute
+            // We encode the URL into the attribute to avoid HTML injection and spacing issues
+            return '<a href="#auth" class="shop-auth-trigger" data-auth-url="' + encodeURIComponent(url) + '">' + text + '</a>';
           }
           // If it's a checkout link, replace the text
           else if (url.includes('/cart') || url.includes('checkout')) {
@@ -717,6 +716,12 @@ const historyUrl = `${window.shopBackendUrl}?history=true&conversation_id=${enco
           if (!authUrl) {
             console.error('No auth URL found in element');
             return;
+          }
+          // data-auth-url is encoded when set; try to decode it
+          try {
+            authUrl = decodeURIComponent(authUrl);
+          } catch (e) {
+            // ignore decoding errors and use raw value
           }
         }
 
