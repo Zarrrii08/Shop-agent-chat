@@ -2,7 +2,7 @@
 
 client_id = "3aed1d00075fc392d1b12dae45303908"
 name = "AiAgent"
-handle = "shop-agent-chat"
+handle = "webgeeks-ai-agent-chat"
 application_url = "https://shopify-agent-003f.webgeeksolutions.com.au"
 embedded = true
 
