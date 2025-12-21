@@ -77,6 +77,8 @@ export async function generateAuthUrl(conversationId, shopId) {
     console.log('[generateAuthUrl] Setting searchParams - redirectUri:', redirectUri);
     console.log('[generateAuthUrl] redirectUri type:', typeof redirectUri);
     console.log('[generateAuthUrl] redirectUri length:', redirectUri ? redirectUri.length : 'null/undefined');
+    console.log('[generateAuthUrl] urlObj before setting params:', urlObj.toString());
+    console.log('[generateAuthUrl] urlObj.searchParams before:', urlObj.searchParams.toString());
     
     urlObj.searchParams.set('client_id', clientId || '');
     urlObj.searchParams.set('scope', scope);
@@ -85,6 +87,10 @@ export async function generateAuthUrl(conversationId, shopId) {
     urlObj.searchParams.set('state', state);
     urlObj.searchParams.set('code_challenge', challenge);
     urlObj.searchParams.set('code_challenge_method', codeChallengeMethod);
+
+    console.log('[generateAuthUrl] urlObj after setting params:', urlObj.toString());
+    console.log('[generateAuthUrl] urlObj.searchParams after:', urlObj.searchParams.toString());
+    console.log('[generateAuthUrl] redirect_uri param value:', urlObj.searchParams.get('redirect_uri'));
 
     authUrl = urlObj.toString();
     console.log('[generateAuthUrl] Final URL built successfully');
@@ -118,12 +124,15 @@ async function getBaseAuthUrl(conversationId) {
   const { getCustomerAccountUrls } = await import('./db.server');
   const urls = await getCustomerAccountUrls(conversationId);
 
-  console.log('[getBaseAuthUrl] Retrieved URLs from DB:', urls);
+  console.log('[getBaseAuthUrl] Retrieved URLs from DB:', JSON.stringify(urls, null, 2));
   console.log('[getBaseAuthUrl] authorizationUrl:', urls?.authorizationUrl);
+  console.log('[getBaseAuthUrl] authorizationUrl type:', typeof urls?.authorizationUrl);
+  console.log('[getBaseAuthUrl] authorizationUrl length:', urls?.authorizationUrl ? urls.authorizationUrl.length : 'null/undefined');
 
   // Return stored URL or default to Shopify accounts
   const result = urls?.authorizationUrl || 'https://accounts.shopify.com/oauth/authorize';
   console.log('[getBaseAuthUrl] Returning:', result);
+  console.log('[getBaseAuthUrl] Result type:', typeof result);
   return result;
 }
 
