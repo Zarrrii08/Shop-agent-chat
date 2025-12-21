@@ -83,3 +83,5 @@ shopify app deploy --force
 # Step 3: Verify deployment
 curl -I https://shopify-agent-003f.webgeeksolutions.com.au
 pm2 logs shop-chat-agent --lines 50
+
+pm2 logs shop-chat-agent --lines 100

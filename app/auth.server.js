@@ -38,68 +38,36 @@ export async function generateAuthUrl(conversationId, shopId) {
 
   // Set code_challenge and code_challenge_method parameters
   const codeChallengeMethod = "S256";
-  let baseAuthUrl = await getBaseAuthUrl(conversationId);
-  console.log('[generateAuthUrl] Base Auth URL retrieved:', baseAuthUrl);
-  console.log('[generateAuthUrl] Base Auth URL type:', typeof baseAuthUrl);
+  
+  // Use the correct Shopify OAuth endpoint format instead of relying on stored URLs
+  // The stored authorization URLs from OpenID discovery contain template parameters that cause issues
+  const baseAuthUrl = `https://shopify.com/authentication/${shopId}/oauth/authorize`;
+  console.log('[generateAuthUrl] Using hardcoded Shopify OAuth endpoint:', baseAuthUrl);
 
-  if (!baseAuthUrl) {
-    baseAuthUrl = 'https://accounts.shopify.com/oauth/authorize';
-    console.warn('[generateAuthUrl] No base auth URL found, falling back to default:', baseAuthUrl);
-  }
+  // Build the final URL using the URL API
+  console.log('[generateAuthUrl] Creating URL object from base:', baseAuthUrl);
+  const urlObj = new URL(baseAuthUrl);
+  console.log('[generateAuthUrl] URL object created successfully');
 
-  // If the returned base URL contains template placeholders like {redirect_uri}, replace them
-  let authUrl;
-  try {
-    console.log('[generateAuthUrl] Processing base URL, checking for placeholders');
-    
-    if (baseAuthUrl.includes('{redirect_uri}')) {
-      console.log('[generateAuthUrl] Found {redirect_uri} placeholder, replacing');
-      baseAuthUrl = baseAuthUrl.replace(/\{redirect_uri\}/g, encodeURIComponent(redirectUri));
-    }
+  console.log('[generateAuthUrl] Setting searchParams - clientId:', clientId);
+  console.log('[generateAuthUrl] Setting searchParams - redirectUri:', redirectUri);
+  console.log('[generateAuthUrl] redirectUri type:', typeof redirectUri);
+  console.log('[generateAuthUrl] redirectUri length:', redirectUri ? redirectUri.length : 'null/undefined');
+  
+  urlObj.searchParams.set('client_id', clientId || '');
+  urlObj.searchParams.set('scope', scope);
+  urlObj.searchParams.set('redirect_uri', redirectUri);
+  urlObj.searchParams.set('response_type', responseType);
+  urlObj.searchParams.set('state', state);
+  urlObj.searchParams.set('code_challenge', challenge);
+  urlObj.searchParams.set('code_challenge_method', codeChallengeMethod);
 
-    if (baseAuthUrl.includes('{client_id}')) {
-      console.log('[generateAuthUrl] Found {client_id} placeholder, replacing');
-      baseAuthUrl = baseAuthUrl.replace(/\{client_id\}/g, clientId || '');
-    }
+  console.log('[generateAuthUrl] urlObj after setting params:', urlObj.toString());
+  console.log('[generateAuthUrl] urlObj.searchParams after:', urlObj.searchParams.toString());
+  console.log('[generateAuthUrl] redirect_uri param value:', urlObj.searchParams.get('redirect_uri'));
 
-    // Build the final URL using the URL API to avoid manual string concatenation issues
-    console.log('[generateAuthUrl] Creating URL object from base:', baseAuthUrl);
-    const urlObj = new URL(baseAuthUrl);
-    console.log('[generateAuthUrl] URL object created successfully');
-    
-    // Ensure we don't leave an empty redirect_uri param from the base
-    if (urlObj.searchParams.has('redirect_uri')) {
-      console.log('[generateAuthUrl] Removing existing redirect_uri param from base');
-      urlObj.searchParams.delete('redirect_uri');
-    }
-
-    console.log('[generateAuthUrl] Setting searchParams - clientId:', clientId);
-    console.log('[generateAuthUrl] Setting searchParams - redirectUri:', redirectUri);
-    console.log('[generateAuthUrl] redirectUri type:', typeof redirectUri);
-    console.log('[generateAuthUrl] redirectUri length:', redirectUri ? redirectUri.length : 'null/undefined');
-    console.log('[generateAuthUrl] urlObj before setting params:', urlObj.toString());
-    console.log('[generateAuthUrl] urlObj.searchParams before:', urlObj.searchParams.toString());
-    
-    urlObj.searchParams.set('client_id', clientId || '');
-    urlObj.searchParams.set('scope', scope);
-    urlObj.searchParams.set('redirect_uri', redirectUri);
-    urlObj.searchParams.set('response_type', responseType);
-    urlObj.searchParams.set('state', state);
-    urlObj.searchParams.set('code_challenge', challenge);
-    urlObj.searchParams.set('code_challenge_method', codeChallengeMethod);
-
-    console.log('[generateAuthUrl] urlObj after setting params:', urlObj.toString());
-    console.log('[generateAuthUrl] urlObj.searchParams after:', urlObj.searchParams.toString());
-    console.log('[generateAuthUrl] redirect_uri param value:', urlObj.searchParams.get('redirect_uri'));
-
-    authUrl = urlObj.toString();
-    console.log('[generateAuthUrl] Final URL built successfully');
-  } catch (err) {
-    // Fallback to original construction if URL parsing fails for unexpected endpoint formats
-    console.warn('[generateAuthUrl] Failed to parse baseAuthUrl with URL API, falling back to string concatenation:', err?.message || err);
-    authUrl = `${baseAuthUrl}?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&state=${state}&code_challenge=${challenge}&code_challenge_method=${codeChallengeMethod}`;
-    console.log('[generateAuthUrl] Fallback Full Auth URL:', authUrl);
-  }
+  const authUrl = urlObj.toString();
+  console.log('[generateAuthUrl] Final URL built successfully');
   
   console.log('[generateAuthUrl] Final Auth URL:', authUrl);
   console.log('[generateAuthUrl] Final Auth URL includes redirect_uri:', authUrl.includes('redirect_uri='));
