@@ -210,16 +210,27 @@ class MCPClient {
         if (error.status === 401) {
           console.log("Unauthorized, generating authorization URL for customer");
 
-          // Generate auth URL
-          const authResponse = await generateAuthUrl(this.conversationId, this.shopId);
+          try {
+            // Generate auth URL
+            const authResponse = await generateAuthUrl(this.conversationId, this.shopId);
+            console.log("Auth URL generated successfully:", authResponse);
 
-          // Instead of retrying, return the auth URL for the front-end
-          return {
-            error: {
-              type: "auth_required",
-              data: `You need to authorize the app to access your customer data. [Click here to authorize](${authResponse.url})`
-            }
-          };
+            // Instead of retrying, return the auth URL for the front-end
+            return {
+              error: {
+                type: "auth_required",
+                data: `You need to authorize the app to access your customer data. [Click here to authorize](${authResponse.url})`
+              }
+            };
+          } catch (authError) {
+            console.error("Error generating auth URL:", authError);
+            return {
+              error: {
+                type: "auth_error",
+                data: "Failed to generate authorization URL"
+              }
+            };
+          }
         }
 
         // Re-throw other errors

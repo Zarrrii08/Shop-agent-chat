@@ -176,13 +176,26 @@ async function handleChatSession({
   promptType,
   stream
 }) {
+  console.log('[handleChatSession] Processing message:', userMessage);
+  console.log('[handleChatSession] Conversation ID:', conversationId);
+  
   // Phase 2: Detect account-level data requests and ensure authentication
-  if (isAccountDataRequest(userMessage)) {
+  const isAccountRequest = isAccountDataRequest(userMessage);
+  console.log('[handleChatSession] Is account data request:', isAccountRequest);
+  
+  if (isAccountRequest) {
+    console.log('[handleChatSession] Account data requested, checking authentication');
     const isAuthenticated = await isCustomerAuthenticated(conversationId);
+    console.log('[handleChatSession] Is authenticated:', isAuthenticated);
+    
     if (!isAuthenticated) {
+      console.log('[handleChatSession] Not authenticated, generating auth URL');
       // Generate auth URL and prompt user to authorize
       const shopId = request.headers.get("X-Shopify-Shop-Id");
+      console.log('[handleChatSession] Shop ID:', shopId);
+      
       const authResponse = await generateAuthUrl(conversationId, shopId);
+      console.log('[handleChatSession] Auth response:', authResponse);
 
       // Save the user message for later processing
       await saveMessage(conversationId, 'user', userMessage);
