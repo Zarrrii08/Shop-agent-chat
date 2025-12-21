@@ -65,3 +65,21 @@ Follow standard Shopify app deployment procedures as outlined in the [Shopify do
 
 ## Contributing
 We appreciate your interest in contributing to this project. As this is an example repository intended for educational and reference purposes, we are not accepting contributions.
+
+
+## deployement
+# Step 1: Commit and push to GitHub (on your local machine)
+git add .
+git commit -m "Fix auth redirect_uri undefined issue - use URL API to build auth URL properly"
+git push origin main
+
+# Step 2: Pull on server and deploy (SSH into your server)
+ssh your-server-user@your-server-ip
+cd /path/to/Shop-agent-chat
+git pull origin main
+npm ci
+shopify app deploy --force
+
+# Step 3: Verify deployment
+curl -I https://shopify-agent-003f.webgeeksolutions.com.au
+pm2 logs shop-chat-agent --lines 50
