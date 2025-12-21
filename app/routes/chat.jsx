@@ -2,6 +2,8 @@
  * Chat API Route
  * Handles chat interactions with Claude API and tools
  */
+console.log('[CHAT ROUTE] Module loaded');
+
 import MCPClient from "../mcp-client";
 import { saveMessage, getConversationHistory, storeCustomerAccountUrls, getCustomerAccountUrls as getCustomerAccountUrlsFromDb, getCustomerToken } from "../db.server";
 import { generateAuthUrl } from "../auth.server";
@@ -64,6 +66,8 @@ async function handleHistoryRequest(request, conversationId) {
  * @returns {Response} Server-sent events stream
  */
 async function handleChatRequest(request) {
+  console.log('[handleChatRequest] Received request:', request.method, request.url);
+  
   try {
     const wantsSse = (request.headers.get("Accept") || "").includes("text/event-stream");
     const body = await safeReadJson(request);
