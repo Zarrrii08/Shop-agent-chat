@@ -724,6 +724,8 @@ const historyUrl = `${window.shopBackendUrl}?history=true&conversation_id=${enco
         console.log('[openAuthPopup] Auth URL includes redirect_uri:', authUrl.includes('redirect_uri'));
         // Extract and log individual params
         const urlObj = new URL(authUrl);
+        console.log('[openAuthPopup] urlObj.search:', urlObj.search);
+        console.log('[openAuthPopup] urlObj.href:', urlObj.href);
         console.log('[openAuthPopup] client_id:', urlObj.searchParams.get('client_id'));
         console.log('[openAuthPopup] redirect_uri:', urlObj.searchParams.get('redirect_uri'));
         console.log('[openAuthPopup] scope:', urlObj.searchParams.get('scope'));
