@@ -48,11 +48,16 @@ export async function generateAuthUrl(conversationId, shopId) {
   const authUrl = `${baseAuthUrl}?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&state=${state}&code_challenge=${challenge}&code_challenge_method=${codeChallengeMethod}`;
   console.log('[generateAuthUrl] Full Auth URL:', authUrl);
   console.log('[generateAuthUrl] Encoded redirect_uri:', encodeURIComponent(redirectUri));
-
-  return {
+  console.log('[generateAuthUrl] Auth URL includes redirect_uri param:', authUrl.includes('redirect_uri='));
+  
+  // Also log what will be sent to client
+  const returnValue = {
     url: authUrl,
     conversation_id: conversationId
   };
+  console.log('[generateAuthUrl] Returning to client:', JSON.stringify(returnValue, null, 2));
+
+  return returnValue;
 }
 
 /**

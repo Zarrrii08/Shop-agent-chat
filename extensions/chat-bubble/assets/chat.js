@@ -371,11 +371,13 @@
         // Process Markdown links
         const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
         processedText = processedText.replace(markdownLinkRegex, (match, text, url) => {
+          console.log('[formatMessageContent] Found link - text:', text, 'url:', url);
           // Check if it's an auth URL
-          if (url.includes('shopify.com/authentication') &&
-             (url.includes('oauth/authorize') || url.includes('authentication'))) {
+          if (url.includes('shopify.com/authentication') || url.includes('accounts.shopify.com')) {
+            console.log('[formatMessageContent] Detected as auth link, storing URL');
             // Store the auth URL in a global variable for later use - this avoids issues with onclick handlers
             window.shopAuthUrl = url;
+            console.log('[formatMessageContent] window.shopAuthUrl set to:', window.shopAuthUrl);
             // Just return normal link that will be handled by the document click handler
             return '<a href="#auth" class="shop-auth-trigger">' + text + '</a>';
           }
@@ -717,6 +719,15 @@ const historyUrl = `${window.shopBackendUrl}?history=true&conversation_id=${enco
             return;
           }
         }
+
+        console.log('[openAuthPopup] Auth URL being opened:', authUrl);
+        console.log('[openAuthPopup] Auth URL includes redirect_uri:', authUrl.includes('redirect_uri'));
+        // Extract and log individual params
+        const urlObj = new URL(authUrl);
+        console.log('[openAuthPopup] client_id:', urlObj.searchParams.get('client_id'));
+        console.log('[openAuthPopup] redirect_uri:', urlObj.searchParams.get('redirect_uri'));
+        console.log('[openAuthPopup] scope:', urlObj.searchParams.get('scope'));
+        console.log('[openAuthPopup] state:', urlObj.searchParams.get('state'));
 
         // Open the popup window centered in the screen
         const width = 600;
