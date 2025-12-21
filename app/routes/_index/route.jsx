@@ -11,6 +11,14 @@ export const loader = async ({ request }) => {
   return null
 };
 
+export const action = async ({ request }) => {
+  // Handle POST requests to root - return 405 Method Not Allowed
+  if (request.method === "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
+  return null;
+};
+
 export default function App() {
   return (
     <div className={styles.index}>
