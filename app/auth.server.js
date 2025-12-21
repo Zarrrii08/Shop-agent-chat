@@ -17,9 +17,10 @@ export async function generateAuthUrl(conversationId, shopId) {
 
   // Use the actual app URL for redirect
   const redirectUri = 'https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback';
-  console.log('[generateAuthUrl] Redirect URI:', redirectUri);
-  console.log('[generateAuthUrl] Client ID:', clientId);
-  console.log('[generateAuthUrl] Scope:', scope);
+  console.log('[generateAuthUrl] START - Redirect URI:', redirectUri);
+  console.log('[generateAuthUrl] START - Client ID:', clientId);
+  console.log('[generateAuthUrl] START - Scope:', scope);
+  console.log('[generateAuthUrl] START - redirectUri type:', typeof redirectUri, 'value:', redirectUri);
 
   // Include the conversation ID and shop ID in the state parameter for tracking
   const state = `${conversationId}-${shopId}`;
@@ -38,7 +39,8 @@ export async function generateAuthUrl(conversationId, shopId) {
   // Set code_challenge and code_challenge_method parameters
   const codeChallengeMethod = "S256";
   let baseAuthUrl = await getBaseAuthUrl(conversationId);
-  console.log('[generateAuthUrl] Base Auth URL:', baseAuthUrl);
+  console.log('[generateAuthUrl] Base Auth URL retrieved:', baseAuthUrl);
+  console.log('[generateAuthUrl] Base Auth URL type:', typeof baseAuthUrl);
 
   if (!baseAuthUrl) {
     baseAuthUrl = 'https://accounts.shopify.com/oauth/authorize';
@@ -46,22 +48,34 @@ export async function generateAuthUrl(conversationId, shopId) {
   }
 
   // If the returned base URL contains template placeholders like {redirect_uri}, replace them
+  let authUrl;
   try {
+    console.log('[generateAuthUrl] Processing base URL, checking for placeholders');
+    
     if (baseAuthUrl.includes('{redirect_uri}')) {
+      console.log('[generateAuthUrl] Found {redirect_uri} placeholder, replacing');
       baseAuthUrl = baseAuthUrl.replace(/\{redirect_uri\}/g, encodeURIComponent(redirectUri));
     }
 
     if (baseAuthUrl.includes('{client_id}')) {
+      console.log('[generateAuthUrl] Found {client_id} placeholder, replacing');
       baseAuthUrl = baseAuthUrl.replace(/\{client_id\}/g, clientId || '');
     }
 
     // Build the final URL using the URL API to avoid manual string concatenation issues
+    console.log('[generateAuthUrl] Creating URL object from base:', baseAuthUrl);
     const urlObj = new URL(baseAuthUrl);
+    console.log('[generateAuthUrl] URL object created successfully');
+    
     // Ensure we don't leave an empty redirect_uri param from the base
     if (urlObj.searchParams.has('redirect_uri')) {
+      console.log('[generateAuthUrl] Removing existing redirect_uri param from base');
       urlObj.searchParams.delete('redirect_uri');
     }
 
+    console.log('[generateAuthUrl] Setting searchParams - clientId:', clientId);
+    console.log('[generateAuthUrl] Setting searchParams - redirectUri:', redirectUri);
+    
     urlObj.searchParams.set('client_id', clientId || '');
     urlObj.searchParams.set('scope', scope);
     urlObj.searchParams.set('redirect_uri', redirectUri);
@@ -70,16 +84,18 @@ export async function generateAuthUrl(conversationId, shopId) {
     urlObj.searchParams.set('code_challenge', challenge);
     urlObj.searchParams.set('code_challenge_method', codeChallengeMethod);
 
-    var authUrl = urlObj.toString();
+    authUrl = urlObj.toString();
+    console.log('[generateAuthUrl] Final URL built successfully');
   } catch (err) {
     // Fallback to original construction if URL parsing fails for unexpected endpoint formats
     console.warn('[generateAuthUrl] Failed to parse baseAuthUrl with URL API, falling back to string concatenation:', err?.message || err);
     authUrl = `${baseAuthUrl}?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&state=${state}&code_challenge=${challenge}&code_challenge_method=${codeChallengeMethod}`;
     console.log('[generateAuthUrl] Fallback Full Auth URL:', authUrl);
   }
-  console.log('[generateAuthUrl] Full Auth URL:', authUrl);
-  console.log('[generateAuthUrl] Encoded redirect_uri:', encodeURIComponent(redirectUri));
-  console.log('[generateAuthUrl] Auth URL includes redirect_uri param:', authUrl.includes('redirect_uri='));
+  
+  console.log('[generateAuthUrl] Final Auth URL:', authUrl);
+  console.log('[generateAuthUrl] Final Auth URL includes redirect_uri:', authUrl.includes('redirect_uri='));
+  console.log('[generateAuthUrl] Final redirect_uri param value:', new URL(authUrl).searchParams.get('redirect_uri'));
   
   // Also log what will be sent to client
   const returnValue = {
