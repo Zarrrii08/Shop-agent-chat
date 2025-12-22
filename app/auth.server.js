@@ -16,9 +16,8 @@ export async function generateAuthUrl(conversationId, shopId) {
   const responseType = "code";
 
   // Use the actual app URL for redirect
-  const redirectUri = "https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback"; // use your env or config if needed
-  if (!redirectUri) throw new Error("redirectUri not set!");
-  
+  const redirectUri = 'https://shopify-agent-003f.webgeeksolutions.com.au/api/auth/callback';
+  console.log('[generateAuthUrl] START - Redirect URI:', redirectUri);
   console.log('[generateAuthUrl] START - Client ID:', clientId);
   console.log('[generateAuthUrl] START - Scope:', scope);
   console.log('[generateAuthUrl] START - redirectUri type:', typeof redirectUri, 'value:', redirectUri);
@@ -42,9 +41,7 @@ export async function generateAuthUrl(conversationId, shopId) {
   
   // Use the correct Shopify OAuth endpoint format instead of relying on stored URLs
   // The stored authorization URLs from OpenID discovery contain template parameters that cause issues
-  // const baseAuthUrl = `https://shopify.com/authentication/${shopId}/oauth/authorize`;
-  const baseAuthUrl = `https://shopify.com/authentication/${shopId}/oauth/authorize?...&redirect_uri=${encodeURIComponent(redirectUri)}&...`;  console.log('[generateAuthUrl] START - Redirect URI:', redirectUri);
-
+  const baseAuthUrl = `https://shopify.com/authentication/${shopId}/oauth/authorize`;
   console.log('[generateAuthUrl] Using hardcoded Shopify OAuth endpoint:', baseAuthUrl);
 
   // Build the final URL using the URL API
